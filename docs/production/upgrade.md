@@ -10,31 +10,31 @@ This page explains how to upgrade a Zulip server, including:
 - [Upgrading the operating system](#upgrading-the-operating-system)
 - [Upgrading PostgreSQL](#upgrading-postgresql)
 
-## Upgrading to a release
+## Upgrading to a Release
 
-Note that there are additional instructions if you're [using
-docker-zulip][docker-upgrade], have [patched Zulip](modify.md),
+Note that there are additional instructions if you're
+[using docker-zulip][docker-upgrade], have [patched Zulip](modify.md),
 or have [modified Zulip-managed configuration
-files](#preserving-local-changes-to-service-configuration-files). To upgrade
-to a new Zulip release:
+files](#preserving-local-changes-to-service-configuration-files).
+To upgrade to a new Zulip release:
 
 1. Read the [upgrade notes](../overview/changelog.md#upgrade-notes)
    for all releases newer than what is currently installed.
 
 1. Download the appropriate release tarball from
-   <https://download.zulip.com/server/>. You can get the latest
-   release (**Zulip Server {{ LATEST_RELEASE_VERSION }}**) with the
-   following command:
+   <https://download.zulip.com/server/>.
+   You can get the latest release (**Zulip Server {{ LATEST_RELEASE_VERSION }}**)
+   with the following command:
 
    ```bash
    curl -fLO https://download.zulip.com/server/zulip-server-latest.tar.gz
    ```
 
-   You also have the option of upgrading Zulip [to a version in a Git
-   repository directly](#upgrading-from-a-git-repository) or creating
-   your own release tarballs from a copy of the [zulip.git
-   repository](https://github.com/zulip/zulip) using
-   `tools/build-release-tarball`.
+   You also have the option of upgrading Zulip
+   [to a version in a Git repository directly](#upgrading-from-a-git-repository)
+   or creating your own release tarballs from a copy of the
+   [zulip.git repository](https://github.com/zulip/zulip)
+   using `tools/build-release-tarball`.
 
 1. Log in to your Zulip and run as root:
 
@@ -47,32 +47,32 @@ to a new Zulip release:
    - Run `apt-get upgrade`
    - Install new versions of Zulip's dependencies (mainly Python packages).
    - (`upgrade-zulip-from-git` only) Build Zulip's frontend assets using `webpack`.
-   - Shut down the Zulip service
+   - Shut down the Zulip service (`/home/zulip/deployments/current/scripts/stop-server`)
    - Run a `puppet apply`
    - Run any database migrations
-   - Bring the Zulip service back up on the new version.
+   - Bring the Zulip service back up on the new version (`/home/zulip/deployments/current/scripts/start-server`)
 
 Upgrading will result in brief downtime for the service, which should
 be under 30 seconds unless there is an expensive database migration
-involved (these will be documented in the [release
-notes](../overview/changelog.md), and usually can be avoided with
-some care). If downtime is problematic for your organization,
-consider testing the upgrade on a
-[backup](export-and-import.md#backups) in advance,
+involved (these will be documented in the [release notes](../overview/changelog.md),
+and usually can be avoided with some care).
+If downtime is problematic for your organization,
+consider testing the upgrade on a [backup](export-and-import.md#backups) in advance,
 doing the final upgrade at off hours, or buying a support contract.
 
-See the [troubleshooting guide](#troubleshooting-and-rollback) if you
-run into any issues or need to roll back the upgrade.
+See the [troubleshooting guide](#troubleshooting-and-rollback)
+if you run into any issues or need to roll back the upgrade.
 
-After you have completed the Zulip upgrade, you may also wish to [upgrade the
-version of PostgreSQL](#upgrading-postgresql).
+After you have completed the Zulip upgrade,
+you may also wish to [upgrade the version of PostgreSQL](#upgrading-postgresql).
 
 ## Upgrading from a Git repository
 
 Zulip supports upgrading a production installation to any commit in a
-Git repository, which is great for [running pre-release changes from
-`main`](modify.md#applying-changes-from-main) or [maintaining a
-fork](modify.md#making-changes). The process is simple:
+Git repository, which is great for
+[running pre-release changes from `main`](modify.md#applying-changes-from-main)
+or [maintaining a fork](modify.md#making-changes).
+The process is simple:
 
 ```bash
 # Upgrade to an official release
@@ -103,8 +103,8 @@ this to `/etc/zulip/zulip.conf`:
 git_repo_url = https://github.com/zulip/zulip.git
 ```
 
-See also our documentation on [upgrading
-docker-zulip](https://github.com/zulip/docker-zulip#upgrading-from-a-git-repository).
+See also our documentation on
+[upgrading docker-zulip](https://github.com/zulip/docker-zulip#upgrading-from-a-git-repository).
 
 ## Updating `settings.py` inline documentation
 
@@ -186,13 +186,11 @@ Useful logs are available in a few places:
   `/var/log/zulip/errors.log`.
 
 If you need help and don't have a support contract, you can visit
-[#production
-help](https://chat.zulip.org/#narrow/channel/31-production-help) in the
-[Zulip development community
-server](https://zulip.com/development-community/) for best-effort help.
+[#production help](https://chat.zulip.org/#narrow/channel/31-production-help)
+in the [Zulip development community server](https://zulip.com/development-community/)
+for best-effort help.
 Please include the relevant error output from the above logs in a
-[Markdown code
-block](https://zulip.com/help/code-blocks)
+[Markdown code block](https://zulip.com/help/code-blocks)
 in any reports.
 
 ### Rolling back to a prior version
@@ -289,6 +287,57 @@ and the latter for `server` contexts.
 
 [context]: http://nginx.org/en/docs/beginners_guide.html#conf_structure
 
+
+## Upgrading PostgreSQL
+
+Starting with Zulip 3.0, we use the latest available version of
+PostgreSQL at installation time (currently version 16). Upgrades to
+the version of PostgreSQL are no longer linked to upgrades of the
+distribution; that is, you may opt to upgrade to PostgreSQL 16 while
+running Ubuntu 22.04.
+
+Not all versions of Zulip Server support all versions of PostgreSQL, however:
+
+```{include} postgresql-support-table.md
+
+```
+
+To upgrade the version of PostgreSQL on the Zulip server:
+
+1. Upgrade your server to the latest Zulip release (at least 3.0).
+
+1. Stop the server, as the `zulip` user:
+
+   ```bash
+   # On Zulip before 4.0, use `supervisor stop all` instead
+   /home/zulip/deployments/current/scripts/stop-server
+   ```
+
+1. Take a backup, in case of any problems:
+
+   ```bash
+   /home/zulip/deployments/current/manage.py backup --output=/home/zulip/postgresql-upgrade.backup.tar.gz
+   ```
+
+1. As root, run the database upgrade tool:
+
+   ```bash
+   /home/zulip/deployments/current/scripts/setup/upgrade-postgresql
+   ```
+
+1. As the `zulip` user, start the server again:
+
+   ```bash
+   # On Zulip before 4.0, use `restart-server` instead of `start-server` instead
+   /home/zulip/deployments/current/scripts/start-server
+   ```
+
+You should now be able to navigate to the Zulip server's URL and
+confirm everything is working correctly.
+
+[docker-upgrade]: https://github.com/zulip/docker-zulip#upgrading-the-zulip-container
+
+
 ## Upgrading the operating system
 
 When you upgrade the operating system on which Zulip is installed
@@ -309,7 +358,7 @@ instructions for other supported platforms.
    to back up the system:
 
    ```bash
-   supervisorctl stop all
+   /home/zulip/deployments/current/scripts/stop-server
    /home/zulip/deployments/current/manage.py backup --output=/home/zulip/release-upgrade.backup.tar.gz
    ```
 
@@ -691,52 +740,3 @@ instructions for other supported platforms.
 9. [Upgrade from Debian 10 to 11](#upgrading-from-debian-10-to-11),
    the next in chain of upgrades leading to a supported operating
    system.
-
-## Upgrading PostgreSQL
-
-Starting with Zulip 3.0, we use the latest available version of
-PostgreSQL at installation time (currently version 16). Upgrades to
-the version of PostgreSQL are no longer linked to upgrades of the
-distribution; that is, you may opt to upgrade to PostgreSQL 16 while
-running Ubuntu 22.04.
-
-Not all versions of Zulip Server support all versions of PostgreSQL, however:
-
-```{include} postgresql-support-table.md
-
-```
-
-To upgrade the version of PostgreSQL on the Zulip server:
-
-1. Upgrade your server to the latest Zulip release (at least 3.0).
-
-1. Stop the server, as the `zulip` user:
-
-   ```bash
-   # On Zulip before 4.0, use `supervisor stop all` instead
-   /home/zulip/deployments/current/scripts/stop-server
-   ```
-
-1. Take a backup, in case of any problems:
-
-   ```bash
-   /home/zulip/deployments/current/manage.py backup --output=/home/zulip/postgresql-upgrade.backup.tar.gz
-   ```
-
-1. As root, run the database upgrade tool:
-
-   ```bash
-   /home/zulip/deployments/current/scripts/setup/upgrade-postgresql
-   ```
-
-1. As the `zulip` user, start the server again:
-
-   ```bash
-   # On Zulip before 4.0, use `restart-server` instead of `start-server` instead
-   /home/zulip/deployments/current/scripts/start-server
-   ```
-
-You should now be able to navigate to the Zulip server's URL and
-confirm everything is working correctly.
-
-[docker-upgrade]: https://github.com/zulip/docker-zulip#upgrading-the-zulip-container
